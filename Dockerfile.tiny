@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1
+
+# Build
+
+FROM golang:1.18-alpine AS build
+ARG GOPROXY=https://goproxy.cn,direct
+WORKDIR /app
+
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+COPY *.go ./
+
+RUN go build -o /docker-go-demo
+
+## Deploy
+
+FROM alpine:3.15
+
+RUN adduser -D nonroot
+
+WORKDIR /
+
+COPY --from=build /docker-go-demo /docker-go-demo
+
+EXPOSE 3000
+
+USER nonroot:nonroot
+
+CMD ["/docker-go-demo"]
